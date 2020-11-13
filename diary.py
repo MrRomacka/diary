@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from diaryMain import Ui_MainWindow
 from diaryTask import Ui_Dialog
-from Diary import db_session
+import db_session
 from tasks import DiaryTasks
 from datetime import datetime
 
