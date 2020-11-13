@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from diaryMain import Ui_MainWindow
 from diaryTask import Ui_Dialog
-import db_session
+from Diary import db_session
 from tasks import DiaryTasks
 from datetime import datetime
 
@@ -39,25 +39,18 @@ class Diary(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.init_task()
-        self.choosed_date = datetime.now().date()
+        self.chosen_date = datetime.now().date()
         self.pushButtonAdd.clicked.connect(self.__add_task)
         self.pushButtonChange.clicked.connect(self.__change_task)
         self.pushButtonDelete.clicked.connect(self.__delete_task)
         self.pushButtonChooseDate.clicked.connect(self.__show_tasks_by_date)
-        self.pushButtonDiscardDate.clicked.connect(self.refresh_tasks)
+        self.pushButtonDiscardDate.clicked.connect(self.init_task)
 
     def init_task(self):
+        self.listWidget.clear()
         reader = session.query(DiaryTasks).filter_by(task_end_date=datetime.now().date())
         for instance in reader.order_by(DiaryTasks.task_end_time):
             self.listWidget.addItem(str(f'{instance.task_title}\n  {instance.task_content}\n'
-                                        f'  {instance.task_end_date.strftime("%Y-%m-%d")}\n'
-                                        f'  {instance.task_end_time.strftime("%H:%M")}'))
-
-    def refresh_tasks(self):
-        self.listWidget.clear()
-        reader = session.query(DiaryTasks).filter_by(task_end_date=self.choosed_date)
-        for instance in reader.order_by(DiaryTasks.task_end_time):
-            self.listWidget.addItem(str(f"{instance.task_title}\n  {instance.task_content}\n"
                                         f'  {instance.task_end_date.strftime("%Y-%m-%d")}\n'
                                         f'  {instance.task_end_time.strftime("%H:%M")}'))
 
@@ -69,16 +62,17 @@ class Diary(QMainWindow, Ui_MainWindow):
             self.listWidget.addItem(str(f"{instance.task_title}\n  {instance.task_content}\n"
                                         f'  {instance.task_end_date.strftime("%Y-%m-%d")}\n'
                                         f'  {instance.task_end_time.strftime("%H:%M")}'))
-        self.choosed_date = date_from_calendar
+        self.chosen_date = date_from_calendar
 
     def __add_task(self):
         example = Task()
         example.type = 'adding'
+        example.dateEdit.setDate(self.chosen_date)
         example.exec()
-        self.refresh_tasks()
+        self.__show_tasks_by_date()
 
     def __change_task(self):
-        reader = session.query(DiaryTasks).filter_by(task_end_date=self.choosed_date)
+        reader = session.query(DiaryTasks).filter_by(task_end_date=self.chosen_date)
         row = reader.order_by(DiaryTasks.task_end_time)[self.listWidget.currentRow()]
         example = Task()
         example.type = 'changing'
@@ -89,14 +83,14 @@ class Diary(QMainWindow, Ui_MainWindow):
         example.exec()
         session.delete(row)
         session.commit()
-        self.refresh_tasks()
+        self.__show_tasks_by_date()
 
     def __delete_task(self):
-        reader = session.query(DiaryTasks).filter_by(task_end_date=self.choosed_date)
+        reader = session.query(DiaryTasks).filter_by(task_end_date=self.chosen_date)
         row = reader.order_by(DiaryTasks.task_end_time)[self.listWidget.currentRow()]
         session.delete(row)
         session.commit()
-        self.refresh_tasks()
+        self.__show_tasks_by_date()
 
 
 sys._excepthook = sys.excepthook
