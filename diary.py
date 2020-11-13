@@ -5,6 +5,7 @@ from diaryTask import Ui_Dialog
 import db_session
 from tasks import DiaryTasks
 from datetime import datetime
+# Do not forget about Directories
 
 
 def exception_hook(exctype, value, traceback):
